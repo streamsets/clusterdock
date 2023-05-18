@@ -60,3 +60,9 @@ target/
 
 # pyenv python configuration file
 .python-version
+
+# IDE
+.idea
+
+# Gerrit
+.gitreview
