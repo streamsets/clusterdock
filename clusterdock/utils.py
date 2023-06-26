@@ -111,8 +111,10 @@ def wait_for_condition(condition, condition_args=None, condition_kwargs=None,
         else:
             success_start_time = None
         sleep(time_between_checks)
-
-    failure(timeout=timeout)
+    if failure is not None:
+        failure(timeout=timeout)
+    else:
+        raise TimeoutError('Timed out after {} seconds'.format(timeout))
 
 
 def join_url_parts(*parts):
