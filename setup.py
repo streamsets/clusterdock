@@ -28,6 +28,7 @@ requirements = [
     'docker==4.2.2',
     'PyYAML',
     'python-dateutil',
+    'requests<=2.31.0'
 ]
 
 setup_requirements = [

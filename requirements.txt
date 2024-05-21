@@ -10,6 +10,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+requests<=2.31.0
 urllib3<2
 colorlog
 docker==4.2.2
