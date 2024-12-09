@@ -83,7 +83,7 @@ class Cluster:
                          node.hostname,
                          node.group)
 
-    def start(self, network, pull_images=False, update_etc_hosts=True):
+    def start(self, network, pull_images=False, update_etc_hosts=True, pre_start_callback=None):
         """Start the cluster.
 
         Args:
@@ -93,6 +93,8 @@ class Cluster:
                 Default: ``False``
             update_etc_hosts (:obj:`bool`): Update the /etc/hosts file on the host with the hostname
                 and IP address of the container. Default: ``True``
+            pre_start_callback (:obj:`func`, optional): Function to be executed between the creation of the
+                container and its start
         """
         logger.info('Starting cluster (%s) on network (%s) ...', self.name, network)
         self.network = network
@@ -118,7 +120,8 @@ class Cluster:
                                               network=self.network)
 
         for node in self:
-            node.start(self.network, cluster_name=self.name, pull_images=pull_images)
+            node.start(self.network, cluster_name=self.name, pull_images=pull_images,
+                       pre_start_callback=pre_start_callback)
 
     def execute(self, command, **kwargs):
         """Execute a command on every :py:class:`clusterdock.models.Node` within the
@@ -251,7 +254,7 @@ class Node:
 
         self.execute_shell = '/bin/sh'
 
-    def start(self, network, cluster_name=None, pull_images=False):
+    def start(self, network, cluster_name=None, pull_images=False, pre_start_callback=None):
         """Start the node.
 
         Args:
@@ -260,6 +263,8 @@ class Node:
             pull_images (:obj:`bool`, optional): Pull every Docker image needed by this node instance,
                 even if it exists locally.
                 Default: ``False``
+            pre_start_callback (:obj:`func`, optional): Function to be executed between the creation of the
+                container and its start
         """
         self.fqdn = '{}.{}'.format(self.hostname, network)
 
@@ -394,6 +399,13 @@ class Node:
                                                    host_config=host_config,
                                                    networking_config=networking_config,
                                                    **create_container_kwargs)['Id']
+
+        if pre_start_callback:
+            if not callable(pre_start_callback):
+                raise TypeError('pre_start_callback() is not callable')
+            logger.info('Running pre_start_callback() ...')
+            pre_start_callback(container_id=container_id, node=self)
+
         client.api.start(container=container_id)
 
         # When the Container instance is created, the corresponding Docker container may not
